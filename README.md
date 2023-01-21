@@ -85,7 +85,7 @@ gazebo --verbose ~/ardupilot_gazebo/worlds/iris_arducopter_runway.world
 
 Terminal 2: SITL
 ```
-cd ~/SCVMON/Tools/autotest
+cd ~/ardupilot/Tools/autotest
 ./sim_vehicle.py -v ArduCopter -f gazebo-iris --console
 ```
 
