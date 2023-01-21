@@ -12,7 +12,6 @@ There are currently some issues downloading submodules.
 So we temporarily suggest downloading the existing ardupilot and overwriting it with our code
 
 ```
-cd ~
 git clone https://github.com/SCVMON/SCVMON.git
 git clone https://github.com/ArduPilot/ardupilot.git
 cd ardupilot
