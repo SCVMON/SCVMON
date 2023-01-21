@@ -21,8 +21,8 @@ git submodule update --init --recursive
 ```
 Then overwrite the 2 directories of SCVMON to ardupilot.
 
-ArduCopter
-libraries
+- ArduCopter
+- libraries
 
 Additional work is done in the ardupilot directory.
 
