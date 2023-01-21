@@ -15,7 +15,8 @@ So we temporarily suggest downloading the existing ardupilot and overwriting it 
 cd ~
 git clone https://github.com/SCVMON/SCVMON.git
 git clone https://github.com/ArduPilot/ardupilot.git
-cd ardupilotgit checkout Copter-4.0
+cd ardupilot
+git checkout Copter-4.0
 git submodule update --init --recursive
 
 ```
