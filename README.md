@@ -5,6 +5,9 @@ The repository contains SCVMON's attack detection and recovery code.
 We tested SCVMON on ubuntu18.04.
 The environment setup below is done targeting ubuntu18.04.
 
+In order to run Gazebo simulator on VMware, some vmware settings need to be changed.
+VM --> Settings.. --> Display -->  uncheck Accelerate 3D graphics
+
 ### Installation 
 
 #### Clone SCVMON:
