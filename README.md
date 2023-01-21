@@ -8,10 +8,24 @@ The environment setup below is done targeting ubuntu18.04.
 ### Installation 
 
 #### Clone SCVMON:
+There are currently some issues downloading submodules.
+So we temporarily suggest downloading the existing ardupilot and overwriting it with our code
+
 ```
 cd ~
 git clone https://github.com/SCVMON/SCVMON.git
+git clone https://github.com/ArduPilot/ardupilot.git
+cd ardupilotgit checkout Copter-4.0
+git submodule update --init --recursive
+
 ```
+Then overwrite the 2 directories of SCVMON to ardupilot.
+
+ArduCopter
+libraries
+
+Additional work is done in the ardupilot directory.
+
 
 #### Install dependencies
 ```
