@@ -25,10 +25,6 @@ public:
 
     bool roll_back(float n);
 
-    float roll_back_recovery(float n);
-
-    void cal_recovery();
-
     void cal_recovery_1();
 
     void cal_recovery_2();
@@ -92,5 +88,6 @@ protected:
     int feature;
     int rec_type;
     bool first;
+    float initial;
 
 };
