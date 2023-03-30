@@ -1,8 +1,5 @@
 #include "SCV.h"
 #include <AP_Math/AP_Math.h>
-#include <fstream>
-#include <iostream>
-//#include <fdeep/fdeep.hpp>
 
 extern int t_a1;
 long r_check = 0;
@@ -12,12 +9,11 @@ float act[4];
 float act_p[400] = {0};
 
 int modulo(int a, int b) {
-  int m = a % b;
-  if (m < 0) {
-    // m += (b < 0) ? -b : b; // avoid this form: it is UB when b == INT_MIN
-    m = (b < 0) ? m - b : m + b;
-  }
-  return m;
+    int m = a % b;
+    if (m < 0) {
+        m = (b < 0) ? m - b : m + b;
+    }
+    return m;
 }
 
 bool SR_V::detect_attack(int rule_number){
@@ -52,14 +48,12 @@ bool SR_V::detect_attack(int rule_number){
         case gyro_x:{
             rec_type = 2;
             avg = 0.05;
-            //th = 0.01;
             max_val = 0.02;
             break;
         }
         case gyro_y:{
             rec_type = 2;
             avg = 0.05; 
-            //th = 0.01;
             max_val = 0.02;
             break;
         }
@@ -67,7 +61,7 @@ bool SR_V::detect_attack(int rule_number){
             rec_type = 2;
             avg = 0.05;
             wd = 20;
-            max_val = 0.02; // --> 0.05
+            max_val = 0.02; 
             break;
         }
         case throttle_thrust:{
@@ -191,74 +185,60 @@ bool SR_V::detect_attack(int rule_number){
             break;
         }
     }
-
     if(rec_type==1){
-
         tmp = modulo(loc-1 , 400);
-        
         val1 = fabsf(_srv[loc] - _srv[tmp]);
-
         if(val1 > 0){
             return true;
         }    
     }
-
     else if(rec_type==2){
         tmp = modulo(loc-1 , 400);
-
         if(rule_number == 12){
             val1 = fabsf(fabsf(_srv[loc]) - fabsf(_srv[loc]));
         }
         else {
             val1 = fabsf(_srv[loc] - _srv[tmp]);
         }
-
         if(val1 > max_val){
-            return true;
-            
+            return true; 
         }
-        
         sum = 0;
         for(int i=0; i< wd; i++){
             tmp1 = modulo(loc-i , 400);
             tmp2 = modulo(loc-i-1 , 400);
-
             if(rule_number == 12){
                 val1 = fabsf(fabsf(_srv[tmp1]) - fabsf(_srv[tmp2]));
             }
             else {
                 val1 = fabsf(_srv[tmp1]-_srv[tmp2]);
             }
-
             sum = sum + val1;
         }
-
         if(sum > avg){
             return true;
         }
     }
-    
     return false;
 }
 
 
 void SR_V::save_srv_float(float value){
-    
+
     if(first == true){
         for(int i =0; i< 400; i++){
             _srv[i] = value;
         }
         first = false;
+        initial = value;
     }
-
     loc = (loc + 1) % 400;
-
     _srv[loc] = value;
 }
 
 bool SR_V::roll_back(float value){
 
-    cal_recovery();
+    cal_recovery_2();
 
     if(fabsf((recovery_value-value)/recovery_value) <0.1f || fabsf(recovery_value-value) < 0.01f ){
         r_count++;
@@ -266,7 +246,6 @@ bool SR_V::roll_back(float value){
     else{
         r_count = 0;
     }
-
     if(r_count>5){
         r_count = 0;
         return true;
@@ -281,12 +260,9 @@ float SR_V::recover_scv_1(float value, int n){
     if(save_rec == false){
         cal_recovery_1();
         // n-400 step
-
         save_rec = true;
     }
-
     tmp = fabsf(value- recovery_value); 
-
     if(tmp <= 0){
         reset_recovery();
         r_check = r_check ^ (1<<n);
@@ -295,7 +271,6 @@ float SR_V::recover_scv_1(float value, int n){
     }
 
     return recovery_value;
-
 }
 
 float SR_V::recover_scv_2(float value, int n){
@@ -303,7 +278,6 @@ float SR_V::recover_scv_2(float value, int n){
     if(save_rec == false){
         cal_recovery_2();
         // n-400 step
-
         save_rec = true;
     }    
 
@@ -312,7 +286,6 @@ float SR_V::recover_scv_2(float value, int n){
     // stop recovery 
     if (fabsf(fabsf(value - recovery_value) / recovery_value ) < 0.1f ){
         r_count++;
-
     }
     else if (fabsf(value - recovery_value) < 0.01f && fabsf(recovery_value) > 0.1f){
         r_count++;
@@ -320,19 +293,16 @@ float SR_V::recover_scv_2(float value, int n){
     else {
         r_count = 0;
     }
-
     if (r_count > 20){
         r_count = 0;
         reset_recovery();
         r_check = r_check ^ (1<<n);
         save_rec = false;
         return value;
-        
     }
-
     return recovery_value;
-
 }
+
 bool SR_V::check_actuator(){
     float avg, sum, sd = 0;
     int tmp1, tmp2;
@@ -340,7 +310,7 @@ bool SR_V::check_actuator(){
     avg = (act[0] + act[1] + act[2] + act[3]) /4;
 
     for(int i=0; i<4; i++){
-        sd = sd + fabs(act[i]-avg);
+        sd = sd + fabsf(act[i]-avg);
     }
     act_p[loc] = sd;
 
@@ -348,23 +318,18 @@ bool SR_V::check_actuator(){
     for(int i=0; i< 10; i++){
         tmp1 = modulo(loc-i , 400);
         tmp2 = modulo(loc-i-1 , 400);
-
         sum = sum + fabsf(act_p[tmp1]-act_p[tmp2]);
     }
-    //var[35] = sd;
-    //var[36] = sum;
 
     if(sum > 0.1){
         return false;
     }
     return true;
-
 }
 
 float SR_V::monitor_actuator(float x, int n){
 
     save_srv_float(x);
-
     act[n-27] = x;
 
     // Identifies if it is necessary to enter recovery mode
@@ -389,17 +354,12 @@ float SR_V::monitor_actuator(float x, int n){
             set_recovery();
         }
     }
-
     return x;
 }  
 float SR_V::monitor_SCV(float x, int n){
 
-    int tmp;
-    float tmp2;
-
     save_srv_float(x);
 
-    tmp = (loc +1) % 400;
     if((r_check >> 27 != 0) && (r_check % 134217728!= 0)){
         total_recovery = true;
         //  actuator value changed + SCV changed
@@ -410,24 +370,13 @@ float SR_V::monitor_SCV(float x, int n){
     if(get_recovery() == false && detect_attack(n) == true ){
         r_check = r_check | (1<<n);
         set_recovery();
-
     }
     if (get_recovery() == true && total_recovery == false){
-        if(rec_type ==1){
-            tmp2 = fabsf(_srv[loc] - _srv[tmp]);
-            
-            if(tmp2 <= 0){
-                // if n step = (n-400) step --> finish recovery 
-                r_check = r_check ^ (1<<n);
-                reset_recovery();
-            }
-        }
-        else{
+        if(rec_type ==2){
             if(roll_back(x) == true){
                 r_check = r_check ^ (1<<n);
                 reset_recovery();
             }
-
         }
     }
     else if (get_recovery() == true && total_recovery == true){
@@ -439,25 +388,13 @@ float SR_V::monitor_SCV(float x, int n){
         }
     }
     return x;
+}
 
-}
-void SR_V::cal_recovery(){
-    if (rec_type==1){
-        cal_recovery_1();
-    }
-    else if (rec_type==2){
-        cal_recovery_2();
-    }
-    else{
-        recovery_value = 0;
-    }
-}
 void SR_V::cal_recovery_1(){
-    int tmp;
-    tmp = (loc + 1) % 400;
-    recovery_value = _srv[tmp];
+    recovery_value = initial;
 
 }
+
 void SR_V::cal_recovery_2(){
     float r_value =0;   
     int i, tmp;
@@ -468,76 +405,3 @@ void SR_V::cal_recovery_2(){
     }
     recovery_value= r_value / 20;
 }
-
-
-/*
-
-
-void SR_V::gather_feature(float x, int n){
-    g_feature[n][loc] = x;
-}
-
-
-float SR_V::monitor_actuator(float x, int n){
-    float diff;
-
-    save_srv_float(x);
-
-    // 1 Create ML actuator value 
-    cal_recovery_3();
-
-   // 2. CUSUM based attack detection
-    diff = fabsf(recovery_value - x);
-
-    if (cusum(diff, n)== true){
-		r_check = r_check | (1<<n);
-        set_recovery();
-    }
-
-    // 3. attack recovery and cancel it 
-
-    if (get_recovery() == true){
-        if(diff/recovery_value < 0.1f || diff < 0.01f) {
-            r_count++;
-        }
-        else{
-            r_count = 0;
-        }
-        if(r_count > 5) {
-            r_count = 0;
-            reset_recovery();
-            r_check = r_check ^ (1<<n);
-        }
-    }
-    return x;
-}   
-*/
-
-
-
-
-/*
-void SR_V::monitor_SCV_vec(Vector3f vec, int n){
-    save_srv_float(vec.x);
-    save_srv_float(vec.y);
-    save_srv_float(vec.z);
-
-
-    // loc2 << gyro_latest.x << "," << gyro_latest.y << ","  << gyro_latest.z  << " " << a << "\n";
-
-    if(get_recovery() == false &&  get_recovery() == false && get_recovery() == false){
-
-        r_check = r_check & (~(1<<1));
-        if(detect_attack(n)==true && r_check==0 ){
-            set_recovery();
-            r_check = r_check | (1<<1);
-        }
-    }
-    else {
-        //vec.x = recover_srv_float(vec.x);
-        //vec.y = recover_srv_float(vec.y);
-        //vec.z = recover_srv_float(vec.z);
-    }
-
-}
-*/
