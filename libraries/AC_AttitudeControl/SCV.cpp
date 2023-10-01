@@ -1,5 +1,7 @@
 #include "SCV.h"
 #include <AP_Math/AP_Math.h>
+#include <fstream>
+#include <iostream>
 
 extern int t_a1;
 long r_check = 0;
@@ -72,37 +74,37 @@ bool SR_V::detect_attack(int rule_number){
             break;
         }
         case euler_roll_angle:{
-            rec_type = 2;
+            rec_type = 3;
             avg = 0.1;
             max_val = 0.05;
             break;
         }
         case euler_pitch_angle:{
-            rec_type = 2;
+            rec_type = 3;
             avg = 0.1;
             max_val = 0.05;
             break;
         }
         case euler_yaw_angle:{
-            rec_type = 2;
+            rec_type = 3;
             avg = 0.25;
             max_val = 0.15;
             break;
         }
         case euler_roll_angle2:{
-            rec_type = 2;
+            rec_type = 3;
             avg = 0.1;
             max_val = 0.05;
             break;
         }
         case euler_pitch_angle2:{
-            rec_type = 2;
+            rec_type = 3;
             avg = 0.1;
             max_val = 0.05;
             break;
         }
         case euler_yaw_rate2:{
-            rec_type = 2;
+            rec_type = 3;
             avg = 0.25;
             max_val = 0.15;
             break;
@@ -194,12 +196,8 @@ bool SR_V::detect_attack(int rule_number){
     }
     else if(rec_type==2){
         tmp = modulo(loc-1 , 400);
-        if(rule_number == 12){
-            val1 = fabsf(fabsf(_srv[loc]) - fabsf(_srv[loc]));
-        }
-        else {
-            val1 = fabsf(_srv[loc] - _srv[tmp]);
-        }
+        val1 = fabsf(_srv[loc] - _srv[tmp]);
+
         if(val1 > max_val){
             return true; 
         }
@@ -218,6 +216,50 @@ bool SR_V::detect_attack(int rule_number){
         if(sum > avg){
             return true;
         }
+    }
+    else if(rec_type==3){
+        if(s_count1 == loc){
+            count1 = 0;
+        }
+        if(s_count2 == loc){
+            count2 = 0;
+        }
+
+        tmp = modulo(loc-1 , 400);
+        if(rule_number == 12){
+            val1 = fabsf(fabsf(_srv[loc]) - fabsf(_srv[loc]));
+        }
+        else{
+            val1 = fabsf(_srv[loc] - _srv[tmp]);
+        }
+        if(val1 > max_val){
+            count1 = count1 + 1; 
+        }
+        if(count1 > 1){
+            s_count1 = loc;
+            return true;
+        }
+
+        sum = 0;
+        for(int i=0; i< wd; i++){
+            tmp1 = modulo(loc-i , 400);
+            tmp2 = modulo(loc-i-1 , 400);
+            if(rule_number == 12){
+                val1 = fabsf(fabsf(_srv[tmp1]) - fabsf(_srv[tmp2]));
+            }
+            else {
+                val1 = fabsf(_srv[tmp1]-_srv[tmp2]);
+            }
+            sum = sum + val1;
+        }
+        if(sum > avg){
+            count2 = count2 + 1; 
+        }
+        if(count2 > wd + 1){
+            s_count2 = loc;
+            return true;
+        }
+
     }
     return false;
 }
@@ -354,6 +396,7 @@ float SR_V::monitor_actuator(float x, int n){
             set_recovery();
         }
     }
+    
     return x;
 }  
 float SR_V::monitor_SCV(float x, int n){
@@ -372,7 +415,7 @@ float SR_V::monitor_SCV(float x, int n){
         set_recovery();
     }
     if (get_recovery() == true && total_recovery == false){
-        if(rec_type ==2){
+        if(rec_type == 2 || rec_type == 3){
             if(roll_back(x) == true){
                 r_check = r_check ^ (1<<n);
                 reset_recovery();
@@ -383,7 +426,7 @@ float SR_V::monitor_SCV(float x, int n){
         if(rec_type == 1){
             x = recover_scv_1(x, n);
         }
-        else if(rec_type ==2){
+        else if(rec_type == 2 || rec_type == 3){
             x = recover_scv_2(x, n);
         }
     }
