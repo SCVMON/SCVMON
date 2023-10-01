@@ -75,6 +75,9 @@ public:
         save_rec = false;
         recovery_value = 0;
         first = true;
+        count1 = 0;
+        count2 = 0;
+
     }
     
 protected:
@@ -89,5 +92,9 @@ protected:
     int rec_type;
     bool first;
     float initial;
+    int count1;
+    int count2;
+    int s_count1;
+    int s_count2;
 
 };
